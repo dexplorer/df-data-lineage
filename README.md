@@ -12,11 +12,15 @@
 - **Capture data lineage relationships for a workflow via CLI**:
   ```sh
     dl-app-cli capture-relationships --workflow_id "1" --env "dev"
+    dl-app-cli capture-relationships --workflow_id "2" --env "dev"
+    dl-app-cli capture-relationships --workflow_id "11" --env "dev"
   ```
 
 - **Capture data lineage relationships for a workflow via CLI with cycle date override**:
   ```sh
     dl-app-cli capture-relationships --workflow_id "1" --env "dev" --cycle_date "2024-12-24"
+    dl-app-cli capture-relationships --workflow_id "2" --env "dev" --cycle_date "2024-12-24"
+    dl-app-cli capture-relationships --workflow_id "11" --env "dev" --cycle_date "2024-12-24"
   ```
 
 - **Capture data lineage relationships for a workflow via API**:
@@ -29,8 +33,12 @@
     https://<host name with port number>/capture-relationships/?workflow_id=<value>
     https://<host name with port number>/capture-relationships/?workflow_id=<value>&cycle_date=<value>
 
+    /capture-relationships/?workflow_id=1
     /capture-relationships/?workflow_id=2
+    /capture-relationships/?workflow_id=11
+    /capture-relationships/?workflow_id=1&cycle_date=2024-12-26
     /capture-relationships/?workflow_id=2&cycle_date=2024-12-26
+    /capture-relationships/?workflow_id=11&cycle_date=2024-12-26
   ```
   ##### Invoke the API from Swagger Docs interface
   ```sh
@@ -45,12 +53,13 @@ Not applicable
 ### API Data (simulated)
 These are metadata that would be captured via the metadata management application UI and stored in a database.
 
-##### ingestion_tasks
+##### integration_tasks
 ```
 {
-    "ingestion_tasks": [
+    "integration_tasks": [
       {
-        "ingestion_task_id": "1",
+        "task_id": "1",
+        "task_type": "ingestion",
         "source_dataset_id": "1",
         "target_dataset_id": "11",
         "ingestion_pattern": {
@@ -62,7 +71,8 @@ These are metadata that would be captured via the metadata management applicatio
         } 
       },
       {
-        "ingestion_task_id": "2",
+        "task_id": "2",
+        "task_type": "ingestion",
         "source_dataset_id": "2",
         "target_dataset_id": "12",
         "ingestion_pattern": {
@@ -74,7 +84,8 @@ These are metadata that would be captured via the metadata management applicatio
         } 
       },
       {
-        "ingestion_task_id": "3",
+        "task_id": "3",
+        "task_type": "ingestion",
         "source_dataset_id": "3",
         "target_dataset_id": "13",
         "ingestion_pattern": {
@@ -84,18 +95,10 @@ These are metadata that would be captured via the metadata management applicatio
             "load_type": "incremental", 
             "idempotent": true 
         } 
-      }
-    ]
-  }
-  
-```
-
-##### distribution_tasks
-```
-{
-    "distribution_tasks": [
+      },
       {
-        "distribution_task_id": "1",
+        "task_id": "11",
+        "task_type": "distribution",
         "source_dataset_id": "4",
         "target_dataset_id": "14",
         "distribution_pattern": {
@@ -103,7 +106,7 @@ These are metadata that would be captured via the metadata management applicatio
             "source_type": "spark sql file", 
             "target_type": "local delim file" 
         } 
-      }
+      }      
     ]
   }
     
@@ -117,95 +120,129 @@ Data lineage relationships for workflow 1
 {
   "results": [
     {
-      "rule_id": "1",
-      "result": "Pass",
-      "expectation": "ExpectColumnValuesCountToMatch",
-      "expected": {
-        "group_by_column_values": [
-          "all"
-        ],
-        "measure_value": [
-          9
-        ]
+      "parent_node": {
+        "object_name": "/workspaces/df-data-lineage/data/in/assets_20241226.csv",
+        "object_type": "local delim file",
+        "complex_object": false,
+        "node_type": "dataset"
       },
-      "actual": {
-        "group_by_column_values": [
-          "all"
-        ],
-        "measure_value": [
-          9
-        ]
+      "child_node": {
+        "object_name": "1",
+        "object_type": "ingestion",
+        "complex_object": false,
+        "node_type": "process"
       }
     },
     {
-      "rule_id": "2",
-      "result": "Pass",
-      "expectation": "ExpectColumnValueCountsMedianToMatch",
-      "expected": {
-        "group_by_column_values": [
-          "all"
-        ],
-        "measure_value": [
-          "2"
-        ]
+      "parent_node": {
+        "object_name": "1",
+        "object_type": "ingestion",
+        "complex_object": false,
+        "node_type": "process"
       },
-      "actual": {
-        "group_by_column_values": [
-          "all"
-        ],
-        "measure_value": [
-          "2"
-        ]
+      "child_node": {
+        "object_name": "dl_asset_mgmt.tasset",
+        "object_type": "spark table",
+        "complex_object": false,
+        "node_type": "dataset"
+      }
+    }
+  ]
+}
+
+Data lineage relationships for workflow 2
+
+{
+  "results": [
+    {
+      "parent_node": {
+        "object_name": "/workspaces/df-data-lineage/data/in/acct_positions_20241226.csv",
+        "object_type": "local delim file",
+        "complex_object": false,
+        "node_type": "dataset"
+      },
+      "child_node": {
+        "object_name": "2",
+        "object_type": "ingestion",
+        "complex_object": false,
+        "node_type": "process"
       }
     },
     {
-      "rule_id": "3",
-      "result": "Pass",
-      "expectation": "ExpectColumnValuesSumToMatch",
-      "expected": {
-        "group_by_column_values": [
-          "1",
-          "2"
-        ],
-        "measure_value": [
-          -65000.0,
-          -5000.0
-        ]
+      "parent_node": {
+        "object_name": "2",
+        "object_type": "ingestion",
+        "complex_object": false,
+        "node_type": "process"
       },
-      "actual": {
-        "group_by_column_values": [
-          "1",
-          "2"
-        ],
-        "measure_value": [
-          -65000.0,
-          -5000.0
-        ]
+      "child_node": {
+        "object_name": "dl_asset_mgmt.tacct_pos",
+        "object_type": "spark table",
+        "complex_object": false,
+        "node_type": "dataset"
+      }
+    }
+  ]
+}
+
+Data lineage relationships for workflow 11
+
+{
+  "results": [
+    {
+      "parent_node": {
+        "object_name": "/workspaces/df-data-lineage/sql/ext_asset_value_agg.sql",
+        "object_type": "spark sql file",
+        "complex_object": true,
+        "node_type": "dataset"
+      },
+      "child_node": {
+        "object_name": "11",
+        "object_type": "distribution",
+        "complex_object": false,
+        "node_type": "process"
       }
     },
     {
-      "rule_id": "4",
-      "result": "Pass",
-      "expectation": "ExpectColumnUniqueValuesCountToMatch",
-      "expected": {
-        "group_by_column_values": [
-          "1",
-          "2"
-        ],
-        "measure_value": [
-          7,
-          2
-        ]
+      "parent_node": {
+        "object_name": "11",
+        "object_type": "distribution",
+        "complex_object": false,
+        "node_type": "process"
       },
-      "actual": {
-        "group_by_column_values": [
-          "1",
-          "2"
-        ],
-        "measure_value": [
-          7,
-          2
-        ]
+      "child_node": {
+        "object_name": "/workspaces/df-data-lineage/data/out/asset_value_agg_20241226.dat",
+        "object_type": "local delim file",
+        "complex_object": false,
+        "node_type": "dataset"
+      }
+    },
+    {
+      "parent_node": {
+        "object_name": "dl_asset_mgmt.tasset",
+        "object_type": "",
+        "complex_object": false,
+        "node_type": "dataset"
+      },
+      "child_node": {
+        "object_name": "/workspaces/df-data-lineage/sql/ext_asset_value_agg.sql",
+        "object_type": "spark sql file",
+        "complex_object": true,
+        "node_type": "dataset"
+      }
+    },
+    {
+      "parent_node": {
+        "object_name": "dl_asset_mgmt.tacct_pos",
+        "object_type": "",
+        "complex_object": false,
+        "node_type": "dataset"
+      },
+      "child_node": {
+        "object_name": "/workspaces/df-data-lineage/sql/ext_asset_value_agg.sql",
+        "object_type": "spark sql file",
+        "complex_object": true,
+        "node_type": "dataset"
       }
     }
   ]
