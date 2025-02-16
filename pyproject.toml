@@ -1,0 +1,56 @@
+[build-system]
+requires = ["setuptools >= 64.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dl_app"
+version = "0.0.1"
+authors = [
+  { name="Rajakumaran Arivumani", email="author@example.com" },
+]
+description = "Data lineage app package"
+readme = "README.md"
+requires-python = ">=3.12"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+#license = "MIT"
+#license-files = ["LICEN[CS]E*"]
+dependencies = [
+  # app specific 
+  # my packages
+  "utils @ git+https://github.com/dexplorer/utils",
+  "metadata @ git+https://github.com/dexplorer/df-metadata",
+  "app_calendar @ git+https://github.com/dexplorer/df-app-calendar",
+  "config @ git+https://github.com/dexplorer/df-config",
+]
+keywords = ["data", "lineage", "etl", "elt", "framework", "governance"]
+
+[project.optional-dependencies]
+api = [
+  "fastapi" , 
+  "uvicorn[standard]", 
+  ]
+cli = [
+  "click",
+]
+test = [
+  # standard dev tools
+  "pytest",
+  "pytest-cov",
+  "pylint",
+  "black",
+  "ipython",
+]
+
+[project.scripts]
+dl-app-cli = "dl_app.dl_app_cli:main"
+dl-app-api = "dl_app.dl_app_api:main"
+
+[project.urls]
+Homepage = "https://profile.rajakumaran.in"
+Documentation = "https://readthedocs.org"
+Repository = "https://github.com/dexplorer/df-data-lineage.git"
+Issues = "https://github.com/dexplorer/df-data-lineage/issues"
+Changelog = "https://github.com/dexplorer/df-data-lineage/blob/master/CHANGELOG.md"
