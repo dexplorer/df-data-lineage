@@ -1,5 +1,6 @@
 from enum import StrEnum
 from dataclasses import dataclass
+import ast
 
 
 class TechPlatformType(StrEnum):
@@ -25,6 +26,8 @@ class CodeObjectType(StrEnum):
 class LineageNodeType(StrEnum):
     DATASET = "dataset"
     PROCESS = "process"
+    FEED = "feed"
+    PARTNER = "partner"
 
 
 @dataclass
@@ -46,6 +49,15 @@ class LineageNode:
         self.complex_object = complex_object
         self.node_type = node_type
 
+    # @classmethod
+    # def from_dict_str(cls, dict_str: str):
+    #     dict_obj = ast.literal_eval(dict_str)
+    #     return cls(**dict_obj)
+
+    @classmethod
+    def from_dict(cls, node: dict):
+        return cls(**node)
+
     # def __repr__(self):
     #     return str(self)
 
@@ -55,12 +67,23 @@ class LineageRelationship:
     parent_node: LineageNode
     child_node: LineageNode
 
-    def __init__(self, parent_node: LineageNode, child_node: LineageNode):
-        self.parent_node = parent_node
-        self.child_node = child_node
+    def __init__(self, parent_node: LineageNode | str, child_node: LineageNode | str):
+        if isinstance(parent_node, str):
+            self.parent_node = LineageNode.from_dict(node=ast.literal_eval(parent_node))
+        else:
+            self.parent_node = parent_node
+
+        if isinstance(child_node, str):
+            self.child_node = LineageNode.from_dict(node=ast.literal_eval(child_node))
+        else:
+            self.child_node = child_node
 
     # def __repr__(self):
     #     return str(self)
+
+    @classmethod
+    def from_dict(cls, relationship: dict):
+        return cls(**relationship)
 
 
 @dataclass

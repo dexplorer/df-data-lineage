@@ -3,15 +3,19 @@ from metadata import workflow as wf
 from metadata import integration_task as it
 from app_calendar import eff_date as ed
 from dl_app.regex_parser import parser as rp
-from dl_app.lineage import models as lm
+from dl_app.model import models as mm
+from dl_app.graph import draw as gd
 
 from config.settings import ConfigParms as sc
 from utils import file_io as uff
+from utils import csv_io as ufc
 
 import logging
 
 
-def capture_relationships(workflow_id: str, cycle_date: str) -> list:
+def capture_relationships(
+    workflow_id: str, cycle_date: str, lineage_data_file_path: str
+) -> list:
     # Simulate getting the cycle date from API
     # Run this from the parent app
     if not cycle_date:
@@ -44,11 +48,11 @@ def capture_relationships(workflow_id: str, cycle_date: str) -> list:
         source_file_path = sc.resolve_app_path(
             source_dataset.resolve_file_path(cur_eff_date_yyyymmdd)
         )
-        source_node = lm.LineageNode(
+        source_node = mm.LineageNode(
             object_name=source_file_path,
             object_type=source_dataset.dataset_type,
             complex_object=False,
-            node_type=lm.LineageNodeType.DATASET,
+            node_type=mm.LineageNodeType.FEED.value,
         )
 
     elif source_dataset.dataset_type == ds.DatasetType.SPARK_SQL_FILE:
@@ -57,11 +61,11 @@ def capture_relationships(workflow_id: str, cycle_date: str) -> list:
         sql_file_path = sc.resolve_app_path(
             source_dataset.sql_file_path
         )  # pylint: disable=E1101
-        source_node = lm.LineageNode(
+        source_node = mm.LineageNode(
             object_name=sql_file_path,
             object_type=source_dataset.dataset_type,
             complex_object=True,
-            node_type=lm.LineageNodeType.DATASET,
+            node_type=mm.LineageNodeType.DATASET.value,
         )
 
     else:
@@ -81,39 +85,39 @@ def capture_relationships(workflow_id: str, cycle_date: str) -> list:
         target_file_path = sc.resolve_app_path(
             target_dataset.resolve_file_path(cur_eff_date_yyyymmdd)
         )
-        target_node = lm.LineageNode(
+        target_node = mm.LineageNode(
             object_name=target_file_path,
             object_type=target_dataset.dataset_type,
             complex_object=False,
-            node_type=lm.LineageNodeType.DATASET,
+            node_type=mm.LineageNodeType.FEED.value,
         )
 
     elif target_dataset.dataset_type == ds.DatasetType.SPARK_TABLE:
         qual_target_table_name = target_dataset.get_qualified_table_name()
-        target_node = lm.LineageNode(
+        target_node = mm.LineageNode(
             object_name=qual_target_table_name,
             object_type=target_dataset.dataset_type,
             complex_object=False,
-            node_type=lm.LineageNodeType.DATASET,
+            node_type=mm.LineageNodeType.DATASET.value,
         )
 
     else:
         raise RuntimeError("Target dataset type is not expected.")
 
-    process_node = lm.LineageNode(
+    process_node = mm.LineageNode(
         object_name=workflow_id,
         object_type=workflow.workflow_type,
         complex_object=False,
-        node_type=lm.LineageNodeType.PROCESS,
+        node_type=mm.LineageNodeType.PROCESS.value,
     )
 
     lineage_relationships = []
     lineage_relationships.append(
-        lm.LineageRelationship(parent_node=source_node, child_node=process_node)
+        mm.LineageRelationship(parent_node=source_node, child_node=process_node)
     )
 
     lineage_relationships.append(
-        lm.LineageRelationship(parent_node=process_node, child_node=target_node)
+        mm.LineageRelationship(parent_node=process_node, child_node=target_node)
     )
 
     other_relationships = []
@@ -122,10 +126,19 @@ def capture_relationships(workflow_id: str, cycle_date: str) -> list:
             other_relationships = capture_dl_for_spark_sql_file(node=source_node)
 
     lineage_relationships += other_relationships
+
+    logging.info(
+        "Writing the lineage relationships to file %s.", lineage_data_file_path
+    )
+    write_relationships(
+        lineage_relationships=lineage_relationships,
+        lineage_data_file_path=lineage_data_file_path,
+    )
+
     return lineage_relationships
 
 
-def capture_dl_for_spark_sql_file(node: lm.LineageNode) -> list:
+def capture_dl_for_spark_sql_file(node: mm.LineageNode) -> list:
     relationships = []
     catalog_objects = [
         "dl_asset_mgmt.tasset",
@@ -135,7 +148,7 @@ def capture_dl_for_spark_sql_file(node: lm.LineageNode) -> list:
     sql_file_path = node.object_name
     code = uff.uf_read_file_to_str(file_path=sql_file_path)
     ref_object_token_gen = rp.get_ref_object_gen(
-        data_platform=lm.TechPlatformType.SPARK,
+        data_platform=mm.TechPlatformType.SPARK,
         qual_obj_name=sql_file_path,
         code=code,
     )
@@ -144,19 +157,38 @@ def capture_dl_for_spark_sql_file(node: lm.LineageNode) -> list:
         catalog_objects=catalog_objects,
         cat_all_views=catalog_objects,
     )
-    print(ref_object_roles)
+    # print(ref_object_roles)
 
     for obj in ref_object_roles:
-        parent_node = lm.LineageNode(
+        parent_node = mm.LineageNode(
             object_name=obj.object_name,
-            object_type=lm.get_code_type(qual_object_name=obj.object_name),
+            object_type=mm.get_code_type(qual_object_name=obj.object_name),
             complex_object=False,
-            node_type=lm.LineageNodeType.DATASET,
+            node_type=mm.LineageNodeType.DATASET.value,
         )
         child_node = node
-        relationship = lm.LineageRelationship(
+        relationship = mm.LineageRelationship(
             parent_node=parent_node, child_node=child_node
         )
         relationships.append(relationship)
     # print(relationships)
     return relationships
+
+
+def write_relationships(lineage_relationships: list, lineage_data_file_path: str):
+    ufc.uf_write_list_of_data_cls_obj_to_delim_file(
+        dataclass_obj_list=lineage_relationships, file_path=lineage_data_file_path
+    )
+
+
+def plot_lineage_graph(
+    lineage_data_file_path: str, workflow_id: str, lineage_graph_file_path: str
+):
+    nx_graph = gd.create_nx_graph(lineage_data_file_path=lineage_data_file_path)
+    svg_img = gd.draw_graph(
+        nx_graph=nx_graph,
+        root_node=workflow_id,
+        lineage_graph_file_path=lineage_graph_file_path,
+    )
+
+    return svg_img

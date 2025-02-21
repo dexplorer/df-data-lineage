@@ -19,6 +19,7 @@ classifiers = [
 #license-files = ["LICEN[CS]E*"]
 dependencies = [
   # app specific 
+  "pydot", 
   # my packages
   "utils @ git+https://github.com/dexplorer/utils",
   "metadata @ git+https://github.com/dexplorer/df-metadata",

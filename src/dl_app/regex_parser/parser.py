@@ -1,5 +1,5 @@
 import re
-from dl_app.lineage import models as lm
+from dl_app.model import models as mm
 
 
 def get_ref_object_gen(
@@ -52,31 +52,31 @@ def get_ref_object_gen(
         ("OBJECT", r"[A-Za-z0-9_/\$]+\.[A-Za-z0-9_/\$]+"),
     ]
 
-    code_type = lm.get_code_type(qual_obj_name)
+    code_type = mm.get_code_type(qual_obj_name)
     token_specification = []
     if (
-        data_platform == lm.TechPlatformType.TERADATA
-        and code_type == lm.CodeObjectType.SQL_SCRIPT
+        data_platform == mm.TechPlatformType.TERADATA
+        and code_type == mm.CodeObjectType.SQL_SCRIPT
     ):
         token_specification = td_token_specification
     elif (
-        data_platform == lm.TechPlatformType.HIVE
-        and code_type == lm.CodeObjectType.HIVEQL_SCRIPT
+        data_platform == mm.TechPlatformType.HIVE
+        and code_type == mm.CodeObjectType.HIVEQL_SCRIPT
     ):
         token_specification = hive_token_specification
     elif (
-        data_platform == lm.TechPlatformType.SPARK
-        and code_type == lm.CodeObjectType.PYSPARK_SCRIPT
+        data_platform == mm.TechPlatformType.SPARK
+        and code_type == mm.CodeObjectType.PYSPARK_SCRIPT
     ):
         token_specification = spark_token_specification
     elif (
-        data_platform == lm.TechPlatformType.SPARK
-        and code_type == lm.CodeObjectType.SQL_SCRIPT
+        data_platform == mm.TechPlatformType.SPARK
+        and code_type == mm.CodeObjectType.SQL_SCRIPT
     ):
         token_specification = spark_sql_token_specification
     elif (
-        data_platform == lm.TechPlatformType.INFORMATICA
-        and code_type == lm.CodeObjectType.INFA_WORKFLOW
+        data_platform == mm.TechPlatformType.INFORMATICA
+        and code_type == mm.CodeObjectType.INFA_WORKFLOW
     ):
         token_specification = infa_token_specification
 
@@ -92,9 +92,9 @@ def get_ref_object_gen(
         line_column = mo.start() - line_start
 
         if kind.startswith("TARGET_OBJECT"):
-            yield lm.RefObjectToken(kind, value, line_num, line_column)
+            yield mm.RefObjectToken(kind, value, line_num, line_column)
         elif kind == "OBJECT":
-            yield lm.RefObjectToken(kind, value, line_num, line_column)
+            yield mm.RefObjectToken(kind, value, line_num, line_column)
         elif kind == "NEWLINE":
             line_start = mo.end()
             line_num += 1
@@ -116,7 +116,7 @@ def get_ref_object_roles_for_object(
             if token.kind.startswith("TARGET_OBJECT"):
                 object_role = "target"
 
-            ref_object = lm.RefObject(
+            ref_object = mm.RefObject(
                 object_name=object_name,
                 object_role=object_role,
             )

@@ -1,0 +1,5 @@
+parent_node,child_node
+"{'object_name': '/workspaces/df-data-lineage/sql/ext_asset_value_agg.sql', 'object_type': 'spark sql file', 'complex_object': True, 'node_type': 'dataset'}","{'object_name': 'workflow_11', 'object_type': 'distribution', 'complex_object': False, 'node_type': 'process'}"
+"{'object_name': 'workflow_11', 'object_type': 'distribution', 'complex_object': False, 'node_type': 'process'}","{'object_name': '/workspaces/df-data-lineage/data/out/asset_value_agg_20241226.dat', 'object_type': 'local delim file', 'complex_object': False, 'node_type': 'feed'}"
+"{'object_name': 'dl_asset_mgmt.tasset', 'object_type': '', 'complex_object': False, 'node_type': 'dataset'}","{'object_name': '/workspaces/df-data-lineage/sql/ext_asset_value_agg.sql', 'object_type': 'spark sql file', 'complex_object': True, 'node_type': 'dataset'}"
+"{'object_name': 'dl_asset_mgmt.tacct_pos', 'object_type': '', 'complex_object': False, 'node_type': 'dataset'}","{'object_name': '/workspaces/df-data-lineage/sql/ext_asset_value_agg.sql', 'object_type': 'spark sql file', 'complex_object': True, 'node_type': 'dataset'}"
