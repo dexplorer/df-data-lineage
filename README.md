@@ -1,5 +1,20 @@
 # df-data-lineage
 
+This application captures the data lineage relationships at the dataset level as the pipelines run to ingest or distribute data.
+
+Users can view the lineage relationships as a graph which shows the feeds, datasets and processes in the image.
+
+Application can be invoked using CLI or REST API end points. This allows the app to be integrated into a larger data ingestion / distribution framework.
+
+### Define the environment variables
+
+Create a .env file with the following variables.
+
+```
+ENV=dev
+APP_ROOT_DIR=
+```
+
 ### Install
 
 - **Install via Makefile and pip**:
@@ -17,22 +32,22 @@
 
 - **Capture data lineage relationships for a workflow via CLI**:
   ```sh
-    dl-app-cli capture-relationships --workflow_id "workflow_1" --env "dev"
-    dl-app-cli capture-relationships --workflow_id "workflow_2" --env "dev"
-    dl-app-cli capture-relationships --workflow_id "workflow_11" --env "dev"
+    dl-app-cli capture-relationships --workflow_id "workflow_1"
+    dl-app-cli capture-relationships --workflow_id "workflow_2"
+    dl-app-cli capture-relationships --workflow_id "workflow_11"
   ```
 
 - **Capture data lineage relationships for a workflow via CLI with cycle date override**:
   ```sh
-    dl-app-cli capture-relationships --workflow_id "workflow_1" --env "dev" --cycle_date "2024-12-24"
-    dl-app-cli capture-relationships --workflow_id "workflow_2" --env "dev" --cycle_date "2024-12-24"
-    dl-app-cli capture-relationships --workflow_id "workflow_11" --env "dev" --cycle_date "2024-12-24"
+    dl-app-cli capture-relationships --workflow_id "workflow_1" --cycle_date "2024-12-24"
+    dl-app-cli capture-relationships --workflow_id "workflow_2" --cycle_date "2024-12-24"
+    dl-app-cli capture-relationships --workflow_id "workflow_11" --cycle_date "2024-12-24"
   ```
 
 - **Capture data lineage relationships for a workflow via API**:
   ##### Start the API server
   ```sh
-    dl-app-api --env "dev"
+    dl-app-api
   ```
   ##### Invoke the API endpoint
   ```sh
