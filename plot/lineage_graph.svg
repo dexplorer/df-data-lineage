@@ -21,7 +21,7 @@
 <!-- workflow_1 -->
 <g id="node2" class="node">
 <title>workflow_1</title>
-<ellipse fill="#cccccc" stroke="black" cx="277" cy="-338.61" rx="67.35" ry="26.74"/>
+<ellipse fill="none" stroke="black" stroke-width="2" cx="277" cy="-338.61" rx="67.35" ry="26.74"/>
 <text text-anchor="middle" x="277" y="-342.41" font-family="Microsoft JhengHei" font-size="14.00">workflow_1</text>
 <text text-anchor="middle" x="277" y="-327.41" font-family="Microsoft JhengHei" font-size="14.00">process</text>
 </g>
@@ -101,7 +101,7 @@
 <!-- workflow_11 -->
 <g id="node8" class="node">
 <title>workflow_11</title>
-<ellipse fill="none" stroke="black" stroke-width="2" cx="509" cy="-100.87" rx="73.58" ry="26.74"/>
+<ellipse fill="#cccccc" stroke="black" cx="509" cy="-100.87" rx="73.58" ry="26.74"/>
 <text text-anchor="middle" x="509" y="-104.67" font-family="Microsoft JhengHei" font-size="14.00">workflow_11</text>
 <text text-anchor="middle" x="509" y="-89.67" font-family="Microsoft JhengHei" font-size="14.00">process</text>
 </g>

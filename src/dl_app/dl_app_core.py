@@ -13,9 +13,7 @@ from utils import csv_io as ufc
 import logging
 
 
-def capture_relationships(
-    workflow_id: str, cycle_date: str, lineage_data_file_path: str
-) -> list:
+def capture_relationships(workflow_id: str, cycle_date: str) -> list:
     # Simulate getting the cycle date from API
     # Run this from the parent app
     if not cycle_date:
@@ -127,12 +125,29 @@ def capture_relationships(
 
     lineage_relationships += other_relationships
 
+    lineage_data_file_path = (
+        f"{sc.data_out_file_path}/lineage_relationships_{workflow_id}.csv"
+    )
+
     logging.info(
         "Writing the lineage relationships to file %s.", lineage_data_file_path
     )
     write_relationships(
         lineage_relationships=lineage_relationships,
         lineage_data_file_path=lineage_data_file_path,
+    )
+
+    all_lineage_data_file_path = f"{sc.data_out_file_path}/lineage_relationships.csv"
+    ufc.uf_merge_csv_files(
+        in_file_dir_path=sc.data_out_file_path,
+        out_file=all_lineage_data_file_path,
+        in_file_pattern="lineage_relationships_workflow*",
+    )
+    lineage_graph_file_path = f"{sc.img_out_file_path}/lineage_graph.svg"
+    _lineage_graph_img = plot_lineage_graph(
+        lineage_data_file_path=all_lineage_data_file_path,
+        workflow_id=workflow_id,
+        lineage_graph_file_path=lineage_graph_file_path,
     )
 
     return lineage_relationships
