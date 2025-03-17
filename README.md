@@ -12,7 +12,8 @@ Create a .env file with the following variables.
 
 ```
 ENV=dev
-APP_ROOT_DIR=
+APP_ROOT_DIR=/workspaces/df-data-lineage
+NAS_ROOT_DIR=/workspaces/nas
 ```
 
 ### Install
@@ -26,6 +27,12 @@ APP_ROOT_DIR=
   ```sh
   sudo apt-get update
   sudo apt-get install graphviz
+  ```
+
+- **Install dot provided by graphviz (in AWS EC2 AMI Linux machine)**:
+  ```sh
+  sudo dnf update
+  sudo dnf install graphviz
   ```
 
 ### Usage Examples
