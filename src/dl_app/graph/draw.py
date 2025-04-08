@@ -1,14 +1,15 @@
 import networkx as nx
 
 # import itertools
-from functools import lru_cache
+# from functools import lru_cache
 import pydot
 from dl_app.model import models as mm
 from utils import csv_io as ufc
 import logging
+from urllib.parse import quote
 
 
-@lru_cache(maxsize=1)
+# @lru_cache(maxsize=1)
 def create_nx_graph(lineage_data_file_path: str):
     logging.info("Reading lineage relationships file %s.", lineage_data_file_path)
     lineage_relationships = ufc.uf_read_delim_file_to_list_of_dict(
@@ -33,7 +34,6 @@ def generate_graph_nodes_and_edges(
     nodes = []
     edges = []
     for relationship in lineage_relationships:
-
         try:
             if isinstance(relationship, mm.LineageRelationship):
                 parent_node = relationship.parent_node
@@ -62,14 +62,17 @@ def generate_graph_nodes_and_edges(
 
 
 def build_graph_node(lineage_node: mm.LineageNode):
-    node_id = lineage_node.object_name
+    # Graphviz does not handle spaecial chars in the URL correctly.
+    # Use quote() to replace the special chars.
+    node_id = quote(lineage_node.object_name)
+    # print('node_id:', node_id)
     node_attributes = {"category": lineage_node.node_type}
     return (node_id, node_attributes)
 
 
 def build_graph_edge(lineage_relationship: mm.LineageRelationship):
-    parent_node_id = lineage_relationship.parent_node.object_name
-    child_node_id = lineage_relationship.child_node.object_name
+    parent_node_id = quote(lineage_relationship.parent_node.object_name)
+    child_node_id = quote(lineage_relationship.child_node.object_name)
     edge_attributes = {}
     return (parent_node_id, child_node_id, edge_attributes)
 
@@ -101,6 +104,7 @@ def networkx_to_dot(nx_graph, root_node):
         if n:
             # node label
             node_label = build_node_label(n, node_data)
+            # print(n, node_label)
 
             # node style
             if n == root_node:
@@ -133,6 +137,7 @@ def networkx_to_dot(nx_graph, root_node):
                 style=node_style,
             )
             dot_graph.add_node(dot_node)
+            # print(dot_node)
 
     for u, v, edge_data in nx_graph.edges(data=True):
         if v:
@@ -147,6 +152,7 @@ def networkx_to_dot(nx_graph, root_node):
 def build_node_label(node, node_data):
     label_items = [node, node_data["category"]]
     node_label = "\n".join(label_items)
+    # print(node_label)
     return node_label
 
 

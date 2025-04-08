@@ -1,4 +1,5 @@
 from metadata import dataset as ds
+from metadata import data_source as dsrc
 from metadata import workflow as wf
 from metadata import integration_task as it
 from app_calendar import eff_date as ed
@@ -36,6 +37,11 @@ def capture_relationships(workflow_id: str, cycle_date: str) -> list:
     logging.info("Get source dataset metadata")
     source_dataset = ds.get_dataset_from_json(dataset_id=task.source_dataset_id)
 
+    # Simulate getting the data source metadata from API
+    data_source = dsrc.get_data_source_from_json(
+        data_source_id=source_dataset.data_source_id
+    )
+
     # Get current effective date
     cur_eff_date = ed.get_cur_eff_date(
         schedule_id=source_dataset.schedule_id, cycle_date=cycle_date
@@ -44,7 +50,10 @@ def capture_relationships(workflow_id: str, cycle_date: str) -> list:
 
     if source_dataset.dataset_type == ds.DatasetType.LOCAL_DELIM_FILE:
         source_file_path = sc.resolve_app_path(
-            source_dataset.resolve_file_path(cur_eff_date_yyyymmdd)
+            source_dataset.resolve_file_path(
+                date_str=cur_eff_date_yyyymmdd,
+                data_source_user=data_source.data_source_user,
+            )
         )
         source_node = mm.LineageNode(
             object_name=source_file_path,
@@ -66,12 +75,31 @@ def capture_relationships(workflow_id: str, cycle_date: str) -> list:
             node_type=mm.LineageNodeType.DATASET.value,
         )
 
+    elif source_dataset.dataset_type == ds.DatasetType.AWS_S3_DELIM_FILE:
+        source_file_uri = sc.resolve_app_path(
+            source_dataset.resolve_file_uri(
+                date_str=cur_eff_date_yyyymmdd,
+                data_source_user=data_source.data_source_user,
+            )
+        )
+        source_node = mm.LineageNode(
+            object_name=source_file_uri,
+            object_type=source_dataset.dataset_type,
+            complex_object=False,
+            node_type=mm.LineageNodeType.FEED.value,
+        )
+
     else:
         raise RuntimeError("Source dataset type is not expected.")
 
     # Simulate getting the source dataset metadata from API
     logging.info("Get source dataset metadata")
     target_dataset = ds.get_dataset_from_json(dataset_id=task.target_dataset_id)
+
+    # Simulate getting the data source metadata from API
+    data_source = dsrc.get_data_source_from_json(
+        data_source_id=target_dataset.data_source_id
+    )
 
     # Get current effective date
     cur_eff_date = ed.get_cur_eff_date(
@@ -81,7 +109,10 @@ def capture_relationships(workflow_id: str, cycle_date: str) -> list:
 
     if target_dataset.dataset_type == ds.DatasetType.LOCAL_DELIM_FILE:
         target_file_path = sc.resolve_app_path(
-            target_dataset.resolve_file_path(cur_eff_date_yyyymmdd)
+            target_dataset.resolve_file_path(
+                date_str=cur_eff_date_yyyymmdd,
+                data_source_user=data_source.data_source_user,
+            )
         )
         target_node = mm.LineageNode(
             object_name=target_file_path,
@@ -97,6 +128,20 @@ def capture_relationships(workflow_id: str, cycle_date: str) -> list:
             object_type=target_dataset.dataset_type,
             complex_object=False,
             node_type=mm.LineageNodeType.DATASET.value,
+        )
+
+    elif target_dataset.dataset_type == ds.DatasetType.AWS_S3_DELIM_FILE:
+        target_file_uri = sc.resolve_app_path(
+            target_dataset.resolve_file_uri(
+                date_str=cur_eff_date_yyyymmdd,
+                data_source_user=data_source.data_source_user,
+            )
+        )
+        target_node = mm.LineageNode(
+            object_name=target_file_uri,
+            object_type=target_dataset.dataset_type,
+            complex_object=False,
+            node_type=mm.LineageNodeType.FEED.value,
         )
 
     else:
