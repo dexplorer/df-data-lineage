@@ -92,7 +92,7 @@ def main():
     ufl.config_multi_platform_logger(
         log_level=log_level,
         handlers=sc.log_handlers,
-        log_file_path_name=f"{sc.app_log_dir}/{script_name}.log",
+        log_file_path_name=f"{sc.app_log_path}/{script_name}.log",
     )
     logging.info("Configs are set")
     logging.info(os.environ)

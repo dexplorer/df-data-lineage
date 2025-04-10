@@ -4,18 +4,12 @@ import networkx as nx
 # from functools import lru_cache
 import pydot
 from dl_app.model import models as mm
-from utils import csv_io as ufc
 import logging
 from urllib.parse import quote
 
 
 # @lru_cache(maxsize=1)
-def create_nx_graph(lineage_data_file_path: str):
-    logging.info("Reading lineage relationships file %s.", lineage_data_file_path)
-    lineage_relationships = ufc.uf_read_delim_file_to_list_of_dict(
-        file_path=lineage_data_file_path
-    )
-
+def create_nx_graph(lineage_relationships: list[dict]):
     logging.info("Generating lineage graph")
     nx_graph = nx.DiGraph()
     nodes, edges = generate_graph_nodes_and_edges(
@@ -37,7 +31,7 @@ def generate_graph_nodes_and_edges(
         try:
             if isinstance(relationship, mm.LineageRelationship):
                 parent_node = relationship.parent_node
-                child_node = relationship.child_mode
+                child_node = relationship.child_node
             elif isinstance(relationship, dict):
                 relationship = mm.LineageRelationship.from_dict(relationship)
                 parent_node = relationship.parent_node
@@ -77,11 +71,9 @@ def build_graph_edge(lineage_relationship: mm.LineageRelationship):
     return (parent_node_id, child_node_id, edge_attributes)
 
 
-def draw_graph(nx_graph, root_node: str, lineage_graph_file_path: str):
+def convert_to_dot_graph(nx_graph, root_node: str):
     dot_graph = networkx_to_dot(nx_graph, root_node)
-
-    dot_graph.write_svg(lineage_graph_file_path)  # pylint: disable=E1101
-    return dot_graph.create_svg()  # pylint: disable=E1101
+    return dot_graph
 
 
 def networkx_to_dot(nx_graph, root_node):

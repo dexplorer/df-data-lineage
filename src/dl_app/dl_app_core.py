@@ -10,6 +10,8 @@ from dl_app.graph import draw as gd
 from config.settings import ConfigParms as sc
 from utils import file_io as uff
 from utils import csv_io as ufc
+from utils.enums import StoragePlatform
+from utils import aws_s3_io as ufas
 
 import logging
 
@@ -170,30 +172,79 @@ def capture_relationships(workflow_id: str, cycle_date: str) -> list:
 
     lineage_relationships += other_relationships
 
-    lineage_data_file_path = (
-        f"{sc.app_data_out_dir}/lineage_relationships_{workflow_id}.csv"
-    )
+    if sc.data_out_storage_platform == StoragePlatform.AWS_S3_STORAGE:
+        s3_client = ufas.get_s3_client(s3_region=sc.s3_region)
+    else:
+        s3_client = None
 
+    lineage_data_file_path = (
+        f"{sc.app_data_out_path}/lineage_relationships_{workflow_id}.csv"
+    )
     logging.info(
         "Writing the lineage relationships to file %s.", lineage_data_file_path
     )
-    write_relationships(
-        lineage_relationships=lineage_relationships,
-        lineage_data_file_path=lineage_data_file_path,
-    )
+    if sc.data_out_storage_platform == StoragePlatform.NAS_STORAGE:
+        ufc.uf_write_list_of_data_cls_obj_to_delim_file(
+            dataclass_obj_list=lineage_relationships, file_path=lineage_data_file_path
+        )
 
-    all_lineage_data_file_path = f"{sc.app_data_out_dir}/lineage_relationships.csv"
-    ufc.uf_merge_csv_files(
-        in_file_dir_path=sc.app_data_out_dir,
-        out_file=all_lineage_data_file_path,
-        in_file_pattern="lineage_relationships_workflow*",
+    elif sc.data_out_storage_platform == StoragePlatform.AWS_S3_STORAGE:
+        ufas.uf_write_list_of_data_cls_obj_to_delim_file(
+            dataclass_obj_list=lineage_relationships,
+            file_uri=lineage_data_file_path,
+            s3_client=s3_client,
+        )
+
+    else:
+        raise RuntimeError(
+            "Data out storage platform is invalid. Unable to write the lineage relationships."
+        )
+
+    all_lineage_data_file_path = f"{sc.app_data_out_path}/lineage_relationships.csv"
+    logging.info(
+        "Merging the lineage relationships to file %s.", all_lineage_data_file_path
     )
-    lineage_graph_file_path = f"{sc.app_img_out_dir}/lineage_graph.svg"
-    _lineage_graph_img = plot_lineage_graph(
-        lineage_data_file_path=all_lineage_data_file_path,
-        workflow_id=workflow_id,
-        lineage_graph_file_path=lineage_graph_file_path,
+    if sc.data_out_storage_platform == StoragePlatform.NAS_STORAGE:
+        ufc.uf_merge_csv_files(
+            in_file_dir_path=sc.app_data_out_path,
+            out_file=all_lineage_data_file_path,
+            in_file_pattern="lineage_relationships_workflow*",
+        )
+    elif sc.data_out_storage_platform == StoragePlatform.AWS_S3_STORAGE:
+        ufas.uf_merge_csv_files(
+            out_s3_obj_uri=all_lineage_data_file_path,
+            in_s3_bucket=sc.s3_data_out_bucket,
+            in_s3_prefix=f"{sc.app_name}/lineage_relationships_workflow",
+            # in_s3_prefix=sc.app_name,
+            s3_client=s3_client,
+        )
+
+    logging.info("Reading lineage relationships file %s.", all_lineage_data_file_path)
+    if sc.data_out_storage_platform == StoragePlatform.NAS_STORAGE:
+        lineage_relationships = ufc.uf_read_delim_file_to_list_of_dict(
+            file_path=all_lineage_data_file_path
+        )
+    elif sc.data_out_storage_platform == StoragePlatform.AWS_S3_STORAGE:
+        lineage_relationships = ufas.uf_read_delim_file_to_list_of_dict(
+            s3_obj_uri=all_lineage_data_file_path, s3_client=s3_client
+        )
+
+    lineage_graph_file_path = f"{sc.app_img_out_path}/lineage_graph.svg"
+    logging.info(
+        "Saving the lineage relationship plots to file %s.", lineage_graph_file_path
     )
+    nx_graph = gd.create_nx_graph(lineage_relationships=lineage_relationships)
+    dot_graph = gd.convert_to_dot_graph(nx_graph=nx_graph, root_node=workflow_id)
+
+    if sc.data_out_storage_platform == StoragePlatform.NAS_STORAGE:
+        dot_graph.write_svg(lineage_graph_file_path)  # pylint: disable=E1101
+    elif sc.data_out_storage_platform == StoragePlatform.AWS_S3_STORAGE:
+        # return dot_graph.create_svg()  # pylint: disable=E1101
+        ufas.uf_write_svg_image_file(
+            image_content=dot_graph.create_svg(),
+            file_uri=lineage_graph_file_path,
+            s3_client=s3_client,
+        )
 
     return lineage_relationships
 
@@ -233,22 +284,3 @@ def capture_dl_for_spark_sql_file(node: mm.LineageNode) -> list:
         relationships.append(relationship)
     # print(relationships)
     return relationships
-
-
-def write_relationships(lineage_relationships: list, lineage_data_file_path: str):
-    ufc.uf_write_list_of_data_cls_obj_to_delim_file(
-        dataclass_obj_list=lineage_relationships, file_path=lineage_data_file_path
-    )
-
-
-def plot_lineage_graph(
-    lineage_data_file_path: str, workflow_id: str, lineage_graph_file_path: str
-):
-    nx_graph = gd.create_nx_graph(lineage_data_file_path=lineage_data_file_path)
-    svg_img = gd.draw_graph(
-        nx_graph=nx_graph,
-        root_node=workflow_id,
-        lineage_graph_file_path=lineage_graph_file_path,
-    )
-
-    return svg_img

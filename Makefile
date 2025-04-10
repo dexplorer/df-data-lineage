@@ -33,7 +33,7 @@ CONTAINER_PORT := 9090
 
 install: pyproject.toml
 	pip install --upgrade pip &&\
-	pip install .[all]
+	pip install --no-cache-dir .[all]
 
 build-image:
 	docker build \

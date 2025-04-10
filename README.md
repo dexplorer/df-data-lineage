@@ -110,7 +110,7 @@ aws_ecs_container.env
   ##### Invoke CLI App by Deploying ECS Task using ECS Task Definition 
   Enter the following command override under 'Container Overrides'. 
   ```
-  "dl-app-cli", "--app_host_pattern", "aws_ecs_container", "capture-relationships", "--workflow_id", "workflow_1", "--cycle_date", "2024-12-26"
+  "dl-app-cli", "--app_host_pattern", "aws_ecs_container", "capture-relationships", "--workflow_id", "workflow_101", "--cycle_date", "2024-12-26"
   ```
 
 - **via API**:
