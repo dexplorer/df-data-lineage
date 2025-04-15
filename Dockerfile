@@ -1,107 +1,97 @@
-# syntax=docker/dockerfile:1
+# Base stage - build dependencies
 
-# ARG PYTHON_VERSION=3.12
-# FROM python:${PYTHON_VERSION}-slim AS base
-
-FROM public.ecr.aws/amazonlinux/amazonlinux:latest
-ARG PYTHON_VERSION
-ARG CONTAINER_PORT
+FROM public.ecr.aws/amazonlinux/amazonlinux:latest as builder
 
 # Update installed packages and install system dependencies
-RUN dnf update -y && \
-    dnf install -y make && \
-    dnf install -y git && \
-    dnf install -y findutils && \
-    dnf install -y tree
-# findutils is needed for xargs command
-# shadow-utils is needed for useradd command
-# && \ dnf install -y shadow-utils
+RUN dnf update -y \
+    && dnf install -y make \
+    && dnf install -y wget 
 
-# Install python
-RUN dnf install python${PYTHON_VERSION} -y
+ARG PYTHON_VERSION
 
-# Install pip
-RUN dnf install python${PYTHON_VERSION}-pip -y
-
-# Map python and pip commands to installed versions 
-RUN ln -s /usr/bin/python${PYTHON_VERSION} /usr/bin/python & \
-    ln -s /usr/bin/pip${PYTHON_VERSION} /usr/bin/pip
-
-# Map python and pip commands to installed versions 
-# RUN echo -e 'alias python="/usr/local/bin/python3.12" \n alias pip="/usr/local/bin/pip3.12"' >> ~/.bashrc
-
-# Apply bashrc edits to current session
-# RUN source ~/.bashrc
-
-# Install graphviz
-RUN dnf install -y graphviz
-
-# Set work directory
-WORKDIR /df-data-lineage
-
-# Set environment variables
-
-# Prevents Python from writing pyc files.
-ENV PYTHONDONTWRITEBYTECODE=1
-
-# Keeps Python from buffering stdout and stderr to avoid situations where
-# the application crashes without emitting any logs due to buffering.
-ENV PYTHONUNBUFFERED=1
-
-# Copy certs over
-# COPY certs/* /app/
+# Install python and pip 
+RUN dnf install python${PYTHON_VERSION} -y \
+    && dnf install python${PYTHON_VERSION}-pip -y
 
 # Create Python Virtual Env
-RUN python${PYTHON_VERSION} -m venv ~/.venv
+RUN python${PYTHON_VERSION} -m venv /venv
 
-# Activate Python virt env
-RUN source ~/.venv/bin/activate
+# Create and set work directory (make/pip need this to find Makefile and pyproject.toml)
+WORKDIR /df-data-lineage
 
 # Copy the application dependencies
 COPY ./pyproject.toml /df-data-lineage
 COPY ./Makefile /df-data-lineage
 
 # Copy the app dependency source code into the container.
-COPY --from=workspaces utils /packages/utils
-COPY --from=workspaces df-metadata /packages/df-metadata
-COPY --from=workspaces df-app-calendar /packages/df-app-calendar
-COPY --from=workspaces df-config /packages/df-config
+COPY --from=utils . /packages/utils
+COPY --from=df-metadata . /packages/df-metadata
+COPY --from=df-app-calendar . /packages/df-app-calendar
+COPY --from=df-config . /packages/df-config
 
 # Install app dependencies
-RUN --mount=type=cache,target=/root/.cache/pip \
-    make install 
+RUN source /venv/bin/activate \
+    && make install
 
 # Copy the app source code into the container.
 COPY . /df-data-lineage
 
-# Download dependencies as a separate step to take advantage of Docker's caching.
-# Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
-# Leverage a bind mount to requirements.txt to avoid having to copy them into
-# into this layer.
-# RUN --mount=type=cache,target=/root/.cache/pip \
-#     --mount=type=bind,source=requirements.txt,target=requirements.txt \
-#     python -m pip install -r requirements.txt
-
 # Install app 
-RUN --mount=type=cache,target=/root/.cache/pip \
-    make install 
+RUN source /venv/bin/activate \
+    && make install 
+
+
+# Final stage
+
+FROM public.ecr.aws/amazonlinux/amazonlinux:latest as main
+
+# Update installed packages and install system dependencies
+RUN dnf update -y \
+    && dnf install -y make \
+    && dnf install -y git \
+    && dnf install -y findutils \
+    && dnf install -y tree \
+    && dnf install -y graphviz
+# findutils is needed for xargs command
+# shadow-utils is needed for useradd command
+# && \ dnf install -y shadow-utils
+# graphviz is needed for pydot
+
+ARG PYTHON_VERSION
+
+# Install python and pip 
+RUN dnf install python${PYTHON_VERSION} -y \
+    && dnf install python${PYTHON_VERSION}-pip -y
+
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PIP_DISABLE_PIP_VERSION_CHECK=1
+ENV PATH="/venv/bin:$PATH"
+ENV AWS_JAVA_V1_DISABLE_DEPRECATION_ANNOUNCEMENT=true
+
+COPY --from=builder /venv /venv
+
+# Copy the app source code from current directory (where Dockerfile is) into the container.
+COPY . /df-data-lineage
+COPY --from=df-config ./cfg /packages/df-config/cfg
 
 # Expose the port that the application listens on. i.e. container port
 # This is just for documentation. Port should be exposed when the container is instantiated or via docker publish port.
+ARG CONTAINER_PORT
 EXPOSE ${CONTAINER_PORT}
 
+# Set work directory for the app
+WORKDIR /df-data-lineage
+
 # Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/go/dockerfile-user-best-practices/
 RUN useradd -m -s /bin/bash app-user
-# RUN /usr/sbin/useradd -m -s /bin/bash app-user
 
 # Switch to the non-privileged user to run the application.
 USER app-user
 
-# Run the application. 
-# ENTRYPOINT ["dl-app-api"]
-
 # Run the application.
-CMD ["dl-app-api"]
+CMD ["/bin/bash"]
+# CMD ["dl-app-api"]
 # CMD ["dl-app-api", "--debug"]
 # CMD ["dl-app-api", "--debug", "y"]

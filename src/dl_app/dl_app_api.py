@@ -60,7 +60,6 @@ def main():
         "--app_host_pattern",
         help="Environment where the application is hosted.",
         nargs=None,  # 1 argument values
-        default="aws_ec2_native",  # default when the argument is not provided
         required=True,
     )
     parser.add_argument(

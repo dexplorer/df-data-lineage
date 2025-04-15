@@ -6,7 +6,7 @@ Users can view the lineage relationships as a graph which shows the feeds, datas
 
 Application can be invoked using CLI or REST API end points. This allows the app to be integrated into a larger data ingestion / distribution framework.
 
-### Define the environment variables
+### Define the Environment Variables
 
 Update one of the following .env files which is appropriate for the application hosting pattern.
 
@@ -20,7 +20,7 @@ aws_ecs_container.env
 ### Install
 
 - **Install via Makefile and pip**:
-  ```
+  ```sh
     make install-dev
   ```
 
@@ -55,11 +55,11 @@ aws_ecs_container.env
   ```
 
 - **via API**:
-  ##### Start the API server
+  ##### Start the API Server
   ```sh
     dl-app-api --app_host_pattern "aws_ec2_native"
   ```
-  ##### Invoke the API endpoint
+  ##### Invoke the API Endpoint
   ```sh
     https://<host name with port number>/capture-relationships/?workflow_id=<value>
     https://<host name with port number>/capture-relationships/?workflow_id=<value>&cycle_date=<value>
@@ -79,7 +79,7 @@ aws_ecs_container.env
 #### App Hosted as Container on a VM/EC2
 
 - **via CLI**:
-  ```
+  ```sh
 	docker run \
 	--mount=type=bind,src=/home/ec2-user/workspaces/nas,dst=/nas \
   --rm -it df-data-lineage \
@@ -87,7 +87,7 @@ aws_ecs_container.env
   ```
 
 - **via CLI with Cycle Date Override**:
-  ```
+  ```sh
 	docker run \
 	--mount=type=bind,src=/home/ec2-user/workspaces/nas,dst=/nas \
   --rm -it df-data-lineage:latest \
@@ -96,7 +96,7 @@ aws_ecs_container.env
 
 - **via API**:
   ##### Start the API server
-  ```
+  ```sh
 	docker run \
 	--mount=type=bind,src=/home/ec2-user/workspaces/nas,dst=/nas \
 	-p 9090:9090 \
@@ -109,14 +109,14 @@ aws_ecs_container.env
 - **via CLI**:
   ##### Invoke CLI App by Deploying ECS Task using ECS Task Definition 
   Enter the following command override under 'Container Overrides'. 
-  ```
+  ```sh
   "dl-app-cli", "--app_host_pattern", "aws_ecs_container", "capture-relationships", "--workflow_id", "workflow_101", "--cycle_date", "2024-12-26"
   ```
 
 - **via API**:
   ##### Invoke API App by Deploying ECS Task using ECS Task Definition 
   Enter the following command override under 'Container Overrides'. 
-  ```
+  ```sh
   "dl-app-api", "--app_host_pattern", "aws_ecs_container"
   ```
 
@@ -128,7 +128,7 @@ Not applicable
 These are metadata that would be captured via the metadata management application UI and stored in a database.
 
 ##### Workflows
-```
+```json
 {
     "workflows": [
       {

@@ -14,7 +14,6 @@ from utils import logger as ufl
 @click.option(
     "--app_host_pattern",
     required=True,
-    default="aws_ec2_native",
     help="Environment where the application is hosted.",
 )
 @click.option(

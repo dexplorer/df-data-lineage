@@ -240,7 +240,7 @@ def capture_relationships(workflow_id: str, cycle_date: str) -> list:
         dot_graph.write_svg(lineage_graph_file_path)  # pylint: disable=E1101
     elif sc.data_out_storage_platform == StoragePlatform.AWS_S3_STORAGE:
         # return dot_graph.create_svg()  # pylint: disable=E1101
-        ufas.uf_write_svg_image_file(
+        ufas.uf_write_image_file(
             image_content=dot_graph.create_svg(),
             file_uri=lineage_graph_file_path,
             s3_client=s3_client,

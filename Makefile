@@ -32,16 +32,29 @@ CONTAINER_PORT := 9090
 # export DOCKER_BUILDKIT := 1
 
 install: pyproject.toml
-	pip install --upgrade pip &&\
-	pip install --no-cache-dir .[all]
+	pip${PYTHON_VERSION} install --no-cache-dir .[all]
 
 build-image:
 	docker build \
-	--build-context workspaces=/home/ec2-user/workspaces \
+	--build-context utils=/home/ec2-user/workspaces/utils \
+	--build-context df-metadata=/home/ec2-user/workspaces/df-metadata \
+	--build-context df-app-calendar=/home/ec2-user/workspaces/df-app-calendar \
+	--build-context df-config=/home/ec2-user/workspaces/df-config \
+	--build-arg PYTHON_VERSION=${PYTHON_VERSION} \
+	--build-arg CONTAINER_PORT=${CONTAINER_PORT} \
+	-t ${IMAGE}:${IMAGE_TAG} .
+
+build-clean-image:
+	docker build \
+	--build-context utils=/home/ec2-user/workspaces/utils \
+	--build-context df-metadata=/home/ec2-user/workspaces/df-metadata \
+	--build-context df-app-calendar=/home/ec2-user/workspaces/df-app-calendar \
+	--build-context df-config=/home/ec2-user/workspaces/df-config \
 	--build-arg PYTHON_VERSION=${PYTHON_VERSION} \
 	--build-arg CONTAINER_PORT=${CONTAINER_PORT} \
 	--no-cache \
 	-t ${IMAGE}:${IMAGE_TAG} .
+# --no-cache forces docker to rebuild all layers from scratch
 
 run-container:
 	docker run \
@@ -57,16 +70,7 @@ AWS_ECR_REPO := dexplorer/df-data-lineage
 aws-auth-to-ecr:
 	aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/d0h7o5k8
 
-aws-build-image:
-	docker build \
-	--build-context workspaces=/home/ec2-user/workspaces \
-	--build-arg PYTHON_VERSION=${PYTHON_VERSION} \
-	--build-arg CONTAINER_PORT=${CONTAINER_PORT} \
-	--no-cache \
-	-t ${AWS_ECR_REPO} .
-
 aws-tag-image:
-	# docker tag ${AWS_ECR_REPO}:${IMAGE_TAG} ${AWS_ECR}/${AWS_ECR_REPO}:${IMAGE_TAG}
 	docker tag ${IMAGE}:${IMAGE_TAG} ${AWS_ECR}/${AWS_ECR_REPO}:${IMAGE_TAG}
 
 aws-push-image:
