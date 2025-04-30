@@ -1,7 +1,6 @@
 import os
 import logging
 
-# from dotenv import load_dotenv
 from config.settings import ConfigParms as sc
 from dl_app import dl_app_core as dlc
 from utils import logger as ufl

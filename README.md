@@ -11,10 +11,10 @@ Application can be invoked using CLI or REST API end points. This allows the app
 Update one of the following .env files which is appropriate for the application hosting pattern.
 
 ```
-on_prem_vm_native.env
-aws_ec2_native.env
-aws_ec2_container.env
-aws_ecs_container.env
+.env.on_prem_vm_native
+.env.aws_ec2_native
+.env.aws_ec2_container
+.env.aws_ecs_container
 ```
 
 ### Install
@@ -26,14 +26,14 @@ aws_ecs_container.env
 
 - **Install dot provided by graphviz (in Ubuntu Linux machine)**:
   ```sh
-  sudo apt-get update
-  sudo apt-get install graphviz
+    sudo apt-get update
+    sudo apt-get install graphviz
   ```
 
 - **Install dot provided by graphviz (in AWS EC2 AMI Linux machine)**:
   ```sh
-  sudo dnf update
-  sudo dnf install graphviz
+    sudo dnf update
+    sudo dnf install graphviz
   ```
 
 ### Usage Examples
@@ -80,28 +80,28 @@ aws_ecs_container.env
 
 - **via CLI**:
   ```sh
-	docker run \
-	--mount=type=bind,src=/home/ec2-user/workspaces/nas,dst=/nas \
-  --rm -it df-data-lineage \
-  dl-app-cli --app_host_pattern "aws_ec2_container" capture-relationships --workflow_id "workflow_1"
+    docker run \
+    --mount=type=bind,src=/home/ec2-user/workspaces/nas,dst=/nas \
+    --rm -it df-data-lineage \
+    dl-app-cli --app_host_pattern "aws_ec2_container" capture-relationships --workflow_id "workflow_1"
   ```
 
 - **via CLI with Cycle Date Override**:
   ```sh
-	docker run \
-	--mount=type=bind,src=/home/ec2-user/workspaces/nas,dst=/nas \
-  --rm -it df-data-lineage:latest \
-  dl-app-cli --app_host_pattern "aws_ec2_container" capture-relationships --workflow_id "workflow_1" --cycle_date "2024-12-26"
+    docker run \
+    --mount=type=bind,src=/home/ec2-user/workspaces/nas,dst=/nas \
+    --rm -it df-data-lineage:latest \
+    dl-app-cli --app_host_pattern "aws_ec2_container" capture-relationships --workflow_id "workflow_1" --cycle_date "2024-12-26"
   ```
 
 - **via API**:
   ##### Start the API server
   ```sh
-	docker run \
-	--mount=type=bind,src=/home/ec2-user/workspaces/nas,dst=/nas \
-	-p 9090:9090 \
-	--rm -it df-data-lineage:latest \
-  dl-app-api --app_host_pattern "aws_ec2_container"
+    docker run \
+    --mount=type=bind,src=/home/ec2-user/workspaces/nas,dst=/nas \
+    -p 9090:9090 \
+    --rm -it df-data-lineage:latest \
+    dl-app-api --app_host_pattern "aws_ec2_container"
   ```
 
 #### App Hosted as a Container on AWS ECS
@@ -110,14 +110,14 @@ aws_ecs_container.env
   ##### Invoke CLI App by Deploying ECS Task using ECS Task Definition 
   Enter the following command override under 'Container Overrides'. 
   ```sh
-  "dl-app-cli", "--app_host_pattern", "aws_ecs_container", "capture-relationships", "--workflow_id", "workflow_101", "--cycle_date", "2024-12-26"
+    "dl-app-cli", "--app_host_pattern", "aws_ecs_container", "capture-relationships", "--workflow_id", "workflow_101", "--cycle_date", "2024-12-26"
   ```
 
 - **via API**:
   ##### Invoke API App by Deploying ECS Task using ECS Task Definition 
   Enter the following command override under 'Container Overrides'. 
   ```sh
-  "dl-app-api", "--app_host_pattern", "aws_ecs_container"
+    "dl-app-api", "--app_host_pattern", "aws_ecs_container"
   ```
 
 ### Sample Input

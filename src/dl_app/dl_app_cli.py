@@ -2,8 +2,6 @@ import logging
 import os
 
 import click
-
-# from dotenv import load_dotenv
 from config.settings import ConfigParms as sc
 from dl_app import dl_app_core as dlc
 from utils import logger as ufl
@@ -69,7 +67,6 @@ def capture_relationships(workflow_id: str, cycle_date: str):
     dl_relationships = dlc.capture_relationships(
         workflow_id=workflow_id, cycle_date=cycle_date
     )
-
     logging.info(
         "Finished capturing data lineage relationships for the workflow %s", workflow_id
     )

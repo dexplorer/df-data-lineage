@@ -94,8 +94,8 @@ def capture_relationships(workflow_id: str, cycle_date: str) -> list:
     else:
         raise RuntimeError("Source dataset type is not expected.")
 
-    # Simulate getting the source dataset metadata from API
-    logging.info("Get source dataset metadata")
+    # Simulate getting the target dataset metadata from API
+    logging.info("Get target dataset metadata")
     target_dataset = ds.get_dataset_from_json(dataset_id=task.target_dataset_id)
 
     # Simulate getting the data source metadata from API
